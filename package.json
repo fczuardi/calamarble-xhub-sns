@@ -11,19 +11,18 @@
   "scripts": {
     "info": "npm-scripts-info",
     "start": "NODE_DEBUG=dev babel-node ./src/index.js",
-    "build:npm": "babel --ignore node_modules,dist --out-dir ./dist/npm .",
-    "postbuild:npm": "cp package.json dist/npm/.",
+    "foo": "NODE_DEBUG=dev babel-node ./foo.js",
+    "build:npm": "babel --ignore node_modules,dist,tasks --out-dir ./dist/npm .",
+    "postbuild:npm": "babel-node tasks/npmPostBuild.js",
     "publish:npm": "npm run build:npm && npm publish dist/npm",
-    "prepublish:aws": "npm run build:npm && cp dist/npm/src/index.js dist/npm/aws.js",
-    "publish:aws": "claudia create --region us-east-1 --source ./dist/npm/ --handler aws.handler --policies policies",
-    "destroy:aws": "claudia destroy --source ./dist/npm/ --handler aws.handler",
     "ppp": "npm version patch && git push && git push --tags && npm run publish:npm",
     "mpp": "npm version minor && git push && git push --tags && npm run publish:npm"
   },
   "babel": {
     "plugins": [
       "transform-es2015-modules-commonjs",
-      "transform-object-rest-spread"
+      "transform-object-rest-spread",
+      "transform-async-to-generator"
     ]
   },
   "eslintConfig": {
@@ -31,13 +30,15 @@
   },
   "devDependencies": {
     "babel-cli": "^6.11.4",
+    "babel-plugin-transform-async-to-generator": "^6.8.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.11.5",
     "babel-plugin-transform-object-rest-spread": "^6.8.0",
     "eslint": "^3.2.2",
     "eslint-config-calamar": "^2.1.1",
     "eslint-plugin-babel": "^3.3.0",
     "eslint-plugin-import": "^1.12.0",
-    "npm-scripts-info": "^0.3.6"
+    "npm-scripts-info": "^0.3.6",
+    "shelljs": "^0.7.3"
   },
   "description": "check the signature of a http request and if valid post to an AWS SNS topic",
   "repository": {

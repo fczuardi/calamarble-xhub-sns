@@ -1,16 +1,41 @@
-import { SNS } from 'aws-sdk';
+import { SNS, config as awsConfig } from 'aws-sdk';
+import { apiEndpoint as xhubEndpoint } from 'calamarble-xhub';
 
-exports.handler = (event, context) => {
-    const sns = new SNS();
+const snsPublishPromise = (sns, topic, msg) => new Promise((resolve, reject) => {
     const params = {
-        Message: 'Hello world (claudia)',
-        TopicArn: 'arn:aws:sns:us-east-1:572190396208:facebook-posts'
+        TopicArn: topic,
+        Message: msg
     };
     sns.publish(params, (err, data) => {
         if (err) {
-            console.log(err, err.stack); // an error occurred
+            console.error('Error', err, err.stack);
+            reject(err);
         }
-        console.log(data);           // successful response
-        context.succeed('hello world');
+        resolve(data);
     });
+});
+
+const xhubCallBack = config => async (req, res) => {
+    if (config.awsConfig) { awsConfig.update(config.awsConfig); }
+    const sns = new SNS();
+    const publishResponse = await snsPublishPromise(
+        sns, config.topicArn, req.body.toString()
+    );
+    console.log('publishResponse', publishResponse);
+    const result = { success: true };
+    return res ? res.send(result) : result;
+};
+
+const apiEndpoint = userConfig => {
+    const next = xhubCallBack(userConfig);
+    return xhubEndpoint({
+        ...userConfig,
+        next
+    });
+};
+
+export {
+    apiEndpoint,
+    xhubCallBack,
+    snsPublishPromise
 };

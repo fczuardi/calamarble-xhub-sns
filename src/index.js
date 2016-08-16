@@ -18,10 +18,12 @@ const snsPublishPromise = (sns, topic, msg) => new Promise((resolve, reject) => 
 const xhubCallBack = config => async (req, res) => {
     if (config.awsConfig) { awsConfig.update(config.awsConfig); }
     const sns = new SNS();
-    console.log('[xhub-sns] req.body:', JSON.stringify(req.body));
+    const message = req.body instanceof Buffer
+        ? req.body.toString()
+        : JSON.stringify(req.body);
+    console.log('[xhub-sns] req.body:', message);
     const publishResponse = await snsPublishPromise(
-        sns, config.topicArn, JSON.stringify(req.body)
-    );
+                                                sns, config.topicArn, message);
     console.log('[xhub-sns] publishResponse:', publishResponse);
     const result = { success: true };
     return res ? res.send(result) : result;
